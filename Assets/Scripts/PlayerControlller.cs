@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerControlller : MonoBehaviour
 {
@@ -12,5 +13,10 @@ public class PlayerControlller : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public void OnMove(InputValue value)
+    {
+        Debug.Log(value);
     }
 }
