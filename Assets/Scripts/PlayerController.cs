@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,6 +8,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float moveSpeed = 2;
     [SerializeField] private float rotationSpeed = 10;
     [SerializeField] private float gravity = -9.8f;
+    
+    [Space(10)]
+    [Header("Ground Check")]
+    [SerializeField] private Vector3 groundCheckOffset;
+    [SerializeField] private float groundCheckDistance;
+    [SerializeField] private float groundCheckRadius;
+    [SerializeField] private LayerMask groundLayer;
+    
     
     private Vector2 _moveInput;
     private Vector3 _camForward;
@@ -25,7 +34,7 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CalcaulateMovement();
+        CalculateMovement();
         _characterController.Move(_velocity * Time.deltaTime);
     }
 
@@ -34,7 +43,12 @@ public class PlayerController : MonoBehaviour
         _moveInput = value.Get<Vector2>();
     }
 
-    private void CalcaulateMovement()
+    public void OnJump(InputValue value)
+    {
+        
+    }
+
+    private void CalculateMovement()
     {
         _camForward = playerCamera.transform.forward;
         _camRight = playerCamera.transform.right;
@@ -45,11 +59,33 @@ public class PlayerController : MonoBehaviour
 
         _moveDirection = _camRight * _moveInput.x + _camForward * _moveInput.y;
 
-        Quaternion _targetRotation = Quaternion.LookRotation(_moveDirection);
+        _targetRotation = Quaternion.LookRotation(_moveDirection);
         transform.rotation = Quaternion.Slerp(transform.rotation, _targetRotation, rotationSpeed * Time.deltaTime);
 
         //Calculate gravity
         _velocity = _moveDirection * moveSpeed;
         _velocity.y += gravity * Time.deltaTime;
+    }
+
+    private bool IsGrounded()
+    {
+        return Physics.SphereCast(
+            transform.position + groundCheckOffset,
+            groundCheckRadius,
+            Vector3.down, 
+            out RaycastHit hit,
+            groundCheckDistance,
+            groundLayer
+            );
+    }
+
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.purple;
+        Gizmos.DrawWireSphere(transform.position + groundCheckOffset, groundCheckRadius);
+        Gizmos.DrawWireSphere(transform.position + groundCheckOffset + Vector3.down * groundCheckDistance, groundCheckRadius);
+        Gizmos.DrawWireCube((transform.position + groundCheckOffset + Vector3.down * groundCheckDistance)/2,
+            new Vector3(2 * groundCheckRadius, groundCheckRadius,2 * groundCheckRadius));
+        
     }
 }
